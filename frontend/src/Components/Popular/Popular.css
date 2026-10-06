@@ -1,90 +1,61 @@
-.popular{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-    height: 90vh;
+.popular {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin-top: 60px;
+  margin-bottom: 80px;
+  padding: 0 20px;
+  font-family: 'Poppins', sans-serif;
 }
 
-.popular h1{
-    columns: #171717;
-    font-size: 50px;
-    font-weight: 600;
+.popular h1 {
+  color: #171717;
+  font-size: 38px;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin: 0;
+  letter-spacing: 1px;
 }
 
-.popular hr{
-    width: 250px;
-    height: 6px;
-    border-radius: 10px;
-    background: #252525;
+.popular hr {
+  width: 140px;
+  height: 5px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #ff4141 0%, #e03232 100%);
+  border: none;
+  margin-bottom: 30px;
 }
 
-.popular-item{
-    width: 80px;
-    margin-top: 50px;
-    justify-content: center;
-    display: flex;
-    gap: 40px;
+.popular-item {
+  width: 100%;
+  max-width: 1200px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  justify-items: center;
 }
 
-@media(max-width:1280px){
-    .popular{
-        height: 70vh;
-    }
-    .popular h1{
-        font-size: 40px;
-    }
-    .popular hr{
-        width: 200px;
-        height: 4px;
-    }
-    .popular-item{
-        gap: 20px;
-        margin-top: 30px;
-    }
+@media (max-width: 1200px) {
+  .popular-item {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
 }
 
-@media(max-width:1024px){
-    .popular{
-        height: 60vh;
-    }
-    .popular h1{
-        font-size: 30px;
-    }
-    .popular hr{
-        width: 150px;
-        height: 3px;
-    }
-    .popular-item{
-        gap: 15px;
-        margin-top: 20px;
-    }
+@media (max-width: 850px) {
+  .popular-item {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+  .popular h1 {
+    font-size: 28px;
+  }
 }
 
-@media(max-width:800px){
-    .popular{
-        height: 50vh;
-        gap: 6px;
-    }
-    .popular h1{
-        font-size: 20px;
-    }
-    .popular hr{
-        width: 100px;
-        height: 2px;
-    }
-    .popular-item{
-        gap: 5px;
-    }
-}
-
-@media(max-width:500px){
-    .popular{
-        height: 90vh;
-    }
-    .popular-item{
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
+@media (max-width: 500px) {
+  .popular-item {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
 }

@@ -1,211 +1,66 @@
-const port = 4000;
+require("dotenv").config();
 const express = require("express");
-const app = express();
-const mongoose = require("mongoose");
-const jwt = require("jsonwebtoken");
-const multer = require("multer");
 const path = require("path");
 const cors = require("cors");
-const { type } = require("os");
+const connectDB = require("./config/db");
+const { errorHandler, notFound } = require("./middleware/errorMiddleware");
 
+// Route Imports
+const authRoutes = require("./routes/authRoutes");
+const productRoutes = require("./routes/productRoutes");
+const cartRoutes = require("./routes/cartRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
+const orderRoutes = require("./routes/orderRoutes");
 
+// Initialize Express App
+const app = express();
+const PORT = process.env.PORT || 4000;
+
+// Connect to MongoDB Database
+connectDB();
+
+// Core Middleware
 app.use(express.json());
 app.use(cors());
 
+// Static Folder for Product Images
+app.use("/images", express.static(path.join(__dirname, "upload/images")));
 
-//Database connection with MongoDB
-//mongoose.connect("mongodb+srv://tanmay257:tanmay555@cluster0.uqmdsss.mongodb.net/eleganz");
-mongoose.connect("mongodb+srv://tanmay257:tanmay555@cluster0.uqmdsss.mongodb.net/eleganz?retryWrites=true&w=majority&appName=Cluster0")
+// Base API Welcome Route
+app.get("/", (req, res) => {
+  res.send("Eleganz Ecommerce MVC API Server is running");
+});
 
-//API creation
+// MVC Routes (Structured & Legacy Compatible)
+app.use("/upload", uploadRoutes);
+app.use("/api/upload", uploadRoutes);
 
-app.get("/", (req, res)=>{
-    res.send("Express app is running");
-})
+app.use("/", authRoutes);
+app.use("/api/auth", authRoutes);
 
-//Img storage engine
+app.use("/", productRoutes);
+app.use("/api/products", productRoutes);
 
-const storage = multer.diskStorage({
-    destination: './upload/images',
-    filename: (req, file, cb)=>{
-        return cb(null, `${file.fieldname}_${Date.now()}_${path.extname(file.originalname)}`)
+app.use("/", cartRoutes);
+app.use("/api/cart", cartRoutes);
+
+app.use("/", orderRoutes);
+app.use("/api/orders", orderRoutes);
+
+// Error Middleware
+app.use(notFound);
+app.use(errorHandler);
+
+// Export Express App for Vercel Serverless & local usage
+module.exports = app;
+
+// Start Express Server locally
+if (require.main === module) {
+  app.listen(PORT, (error) => {
+    if (!error) {
+      console.log(`Server is running on port ${PORT}`);
+    } else {
+      console.error("Error starting server:", error);
     }
-})
-
-const upload = multer({storage:storage})
-
-//Creating Upload Endpoint for images
-app.use('/images', express.static('upload/images'))
-
-app.post("/upload", upload.single('product'), (req, res)=>{
-    res.json({
-        success: 1,
-        image_url: `http://localhost:${port}/images/${req.file.filename}`
-    })
-})
-
-//Schema for Creating Products
-const Product = mongoose.model("Product",{
-    id:{
-        type: Number,
-        required: true,
-    },
-    name:{
-        type: String,
-        required: true,
-    },
-    image:{
-        type: String,
-        required: true,
-    },
-    category:{
-        type: String,
-        required: true,
-    },
-    new_price:{
-        type: Number,
-        required: true,
-    },
-    old_price:{
-        type: Number,
-        required: true,
-    },
-    date:{
-        type: Date,
-        default: Date.now,
-    },
-    available:{
-        type: Boolean,
-        default: true,
-    },
-})
-
-app.post('/addproduct',async (req, res)=>{
-    let products = await Product.find({});
-    let id;
-    if(products.length>0){
-        let last_product_array = products.slice(-1);
-        let last_product = last_product_array[0];
-        id = last_product.id+1;
-    }
-    else{
-        id = 1;
-    }
-    const product = new Product({
-        id: id,
-        name: req.body.name,
-        image: req.body.image,
-        category: req.body.category,
-        new_price: req.body.new_price,
-        old_price: req.body.old_price,
-    });
-    console.log(product);
-    await product.save();           //Saving the product in the MongoDB
-    console.log('Saved');
-    res.json({
-        success: true,
-        name:req.body.name,
-    })
-})
-
-//Creating api for Deleting Products
-app.post('/removeproduct',async (req,res)=>{
-    await Product.findOneAndDelete({id:req.body.id});
-    console.log("Removed");
-    res.json({
-        success: true,
-        name: req.body.name
-    })
-})
-
-//Creating api for getting All Products
-app.get('/allproducts', async(req,res)=>{
-    let products = await Product.find({});
-    console.log("All Products fetched successfully!");
-    res.send(products);
-})
-
-//Creating Schema for User Model
-const Users = mongoose.model('Users',{
-    name:{
-        type:String,
-    },
-    email:{
-        type:String,
-        unique:true,
-    },
-    password:{
-        type:String,
-    },
-    cartData:{
-        type:Object,
-    },
-    date:{
-        type:Date,
-        default:Date.now,
-    },
-
-})
-
-//Creating endpoint for UserRegistration
-app.post('/signup', async (req, res)=>{
-    let check = await Users.findOne({email:req.body.email});
-    if(check){
-        return res.status(400).json({success:false,errors:"Found Exsisting User with same Email address!"})
-    }
-    let cart = {};
-    for (let i = 0; i < 300; i++) {
-        cart[i] = 0;
-    }
-
-    const user = new Users({
-        name:req.body.username,
-        email:req.body.email,
-        password:req.body.password,
-        cartData:cart,
-    })
-
-    await user.save();
-
-    //jwt user authentication
-    const data = {
-        user:{
-            id:user.id,
-        }
-    }
-
-    const token = jwt.sign(data, 'secret_ecom');        //encryting the data by one layer
-    res.json({success:true, token})
-})
-
-//Creating endpoint for UserLogin
-app.post('/login', async (req, res)=>{
-    let user = await Users.findOne({email:req.body.email});
-    if(user){
-        const passCompare = req.body.password === user.password;
-        if(passCompare){
-            const data = {
-                user:{
-                    id:user.id
-                }
-            }
-            const token = jwt.sign(data, 'secret_ecom');        //encryting the data
-            res.json({success:true, token})
-        }
-        else{
-            res.json({success:false, errors:"Wrong Password"});
-        }
-    }
-    else{
-        res.json({success:false, errors:"User Not Found!"});
-    }
-})
-
-app.listen(port,(error)=>{
-    if(!error){
-        console.log("Server is running on port "+port);
-    }
-    else{
-        console.log("Error: "+error);
-    }
-})
+  });
+}

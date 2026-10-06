@@ -1,8 +1,13 @@
 {
+  "name": "eleganz-mern",
+  "version": "1.0.0",
+  "description": "Eleganz MERN Stack E-Commerce Application",
+  "scripts": {
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm start",
+    "start:admin": "cd admin && npm run dev"
+  },
   "dependencies": {
     "react-router-dom": "^6.28.0"
-  },
-  "scripts": {
-    "start": "node app.js"
   }
 }
